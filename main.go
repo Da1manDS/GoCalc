@@ -20,8 +20,10 @@ func sum(input []int, alpha bool) string {
 func sub(input []int, alpha bool) string {
 	result := input[0] - input[1]
 	if alpha {
-		if result < 0 {
-			return "Вывод ошибки, так как в римской системе нет отрицательных чисел."
+		if result < 1 {
+			err := errors.New("Ошибка, так как в римской системе нет отрицательных чисел и нуля.")
+			fmt.Println(err)
+			os.Exit(1)
 		} else {
 			return numToAlpha(result)
 		}
@@ -40,6 +42,11 @@ func multi(input []int, alpha bool) string {
 func div(input []int, alpha bool) string {
 	result := input[0] / input[1]
 	if alpha {
+		if result == 0 {
+			err := errors.New("Ошибка, так как в римской системе нет отрицательных чисел и нуля.")
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		return numToAlpha(result)
 	}
 	return strconv.Itoa(result)
@@ -69,6 +76,10 @@ func alphaToDec(input []string) []int {
 			decs = append(decs, 9)
 		case "X":
 			decs = append(decs, 10)
+		default:
+			err := errors.New("Ошибка, число лежит за пределами от I до X")
+			fmt.Println(err)
+			os.Exit(1)
 		}
 	}
 	return decs
@@ -94,57 +105,64 @@ func choiceOperator(input []int, operator string, alpha bool) string {
 	return ""
 }
 
-func checkError(input string) string {
+func getResult(input string) string {
 	pre := prepare(input)
-	if cap(pre) != 3 {
-		err := errors.New("Вывод ошибки, так как формат математической операции не удовлетворяет заданию — два операнда и один оператор (+, -, /, *).")
-		fmt.Println(err)
-		return ""
-	} else if cap(pre) < 3 {
-		err := errors.New("Вывод ошибки, так как строка не является математической операцией.")
-		fmt.Println(err)
-		return ""
-	}
-
-	if pre[1] != "+" && pre[1] != "-" && pre[1] != "/" && pre[1] != "*" {
-		err := errors.New("Вывод ошибки, неверный оператор.")
-		fmt.Println(err)
-		return ""
-	}
-
 	a, err1 := strconv.Atoi(pre[0])
 	b, err2 := strconv.Atoi(pre[2])
-	if (err1 == nil && err2 != nil) || (err2 == nil && err1 != nil) {
-		err := errors.New("Вывод ошибки, так как используются одновременно разные системы счисления.")
-		fmt.Println(err)
-		return ""
-	}
-
 	result := ""
 	decs := []int{}
 	if err1 != nil && err2 != nil {
 		decs = alphaToDec(pre)
-		if pre == nil {
-			err := errors.New("Вывод ошибки, не римский знак.")
+		if decs == nil {
+			err := errors.New("Ошибка, не римский знак или лежит за пределами от I до X.")
 			fmt.Println(err)
-			return ""
+			os.Exit(1)
 		}
 		result = choiceOperator(decs, pre[1], true)
 	} else {
-		decs = append(decs, a)
-		decs = append(decs, b)
-		result = choiceOperator(decs, pre[1], false)
+		if a < 0 || a > 10 || b < 0 || b > 10 {
+			err := errors.New("Ошибка, так как число лежит за пределами от 1 до 10.")
+			fmt.Println(err)
+			os.Exit(1)
+		} else {
+			decs = append(decs, a)
+			decs = append(decs, b)
+			result = choiceOperator(decs, pre[1], false)
+		}
 	}
-
 	return result
 }
 
-func calc(input string) string {
-	result := checkError(input)
-	if result == "" {
-		return "Ошибка"
+func checkError(input string) {
+	pre := prepare(input)
+	if cap(pre) > 3 {
+		err := errors.New("Ошибка, так как формат математической операции не удовлетворяет заданию — два операнда и один оператор (+, -, /, *).")
+		fmt.Println(err)
+		os.Exit(1)
+	} else if cap(pre) < 3 {
+		err := errors.New("Ошибка, так как строка не является математической операцией.")
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	return result
+
+	if pre[1] != "+" && pre[1] != "-" && pre[1] != "/" && pre[1] != "*" {
+		err := errors.New("Ошибка, неверный оператор.")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	_, err1 := strconv.Atoi(pre[0])
+	_, err2 := strconv.Atoi(pre[2])
+	if (err1 == nil && err2 != nil) || (err2 == nil && err1 != nil) {
+		err := errors.New("Ошибка, так как используются одновременно разные системы счисления или нецелые числа.")
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func calc(input string) string {
+	checkError(input)
+	return getResult(input)
 }
 
 func numToAlpha(x int) string {
@@ -172,11 +190,36 @@ func numToAlpha(x int) string {
 	return result[2] + result[1] + result[0]
 }
 
+func tests() {
+	arr := []string{
+		"VIII - VII",
+		"10 - 4",
+		"10 * 10",
+		"VIII * VIII",
+		"IX * IX",
+		"3 - 10",
+		"3 - 3",
+		//"I - I",
+		//"I / III",
+		//"I + 3",
+		//"3 + II",
+		//"2.2 + 2",
+		//"11 + 1",
+		//"-1 + 11",
+		//"XI + X",
+	}
+	for i := 0; i < cap(arr); i++ {
+		fmt.Println("Ввод:", arr[i])
+		fmt.Println("Вывод:", calc(arr[i]))
+	}
+}
+
 func main() {
+	//tests()
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Введите операцию:")
 	for {
-		text, _ := reader.ReadString('\n')
-		fmt.Println("Результат:", calc(text))
+		fmt.Println("Введите операцию:")
+		input, _ := reader.ReadString('\n')
+		fmt.Println("Вывод:", calc(input))
 	}
 }
