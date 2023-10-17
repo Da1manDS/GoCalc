@@ -21,7 +21,7 @@ func sub(input []int, alpha bool) string {
 	result := input[0] - input[1]
 	if alpha {
 		if result < 0 {
-			return "Rome ariphmetic"
+			return "Вывод ошибки, так как в римской системе нет отрицательных чисел."
 		} else {
 			return numToAlpha(result)
 		}
@@ -96,14 +96,18 @@ func choiceOperator(input []int, operator string, alpha bool) string {
 
 func checkError(input string) string {
 	pre := prepare(input)
-	if cap(pre) != 3 || cap(pre) < 3 {
-		err := errors.New("Much more arguments...")
+	if cap(pre) != 3 {
+		err := errors.New("Вывод ошибки, так как формат математической операции не удовлетворяет заданию — два операнда и один оператор (+, -, /, *).")
+		fmt.Println(err)
+		return ""
+	} else if cap(pre) < 3 {
+		err := errors.New("Вывод ошибки, так как строка не является математической операцией.")
 		fmt.Println(err)
 		return ""
 	}
 
 	if pre[1] != "+" && pre[1] != "-" && pre[1] != "/" && pre[1] != "*" {
-		err := errors.New("Invalid operator")
+		err := errors.New("Вывод ошибки, неверный оператор.")
 		fmt.Println(err)
 		return ""
 	}
@@ -111,7 +115,7 @@ func checkError(input string) string {
 	a, err1 := strconv.Atoi(pre[0])
 	b, err2 := strconv.Atoi(pre[2])
 	if (err1 == nil && err2 != nil) || (err2 == nil && err1 != nil) {
-		err := errors.New("Diff type of enum")
+		err := errors.New("Вывод ошибки, так как используются одновременно разные системы счисления.")
 		fmt.Println(err)
 		return ""
 	}
@@ -121,7 +125,7 @@ func checkError(input string) string {
 	if err1 != nil && err2 != nil {
 		decs = alphaToDec(pre)
 		if pre == nil {
-			err := errors.New("Not an alpha")
+			err := errors.New("Вывод ошибки, не римский знак.")
 			fmt.Println(err)
 			return ""
 		}
@@ -138,7 +142,7 @@ func checkError(input string) string {
 func calc(input string) string {
 	result := checkError(input)
 	if result == "" {
-		return "Stop calculation"
+		return "Ошибка"
 	}
 	return result
 }
